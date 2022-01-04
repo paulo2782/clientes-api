@@ -18,7 +18,7 @@ class CreateClientsTable extends Migration
             $table->timestamps();
             $table->string('name',150);
             $table->string('address',150);
-            $table->string('cpf_cnpj',18);
+            $table->string('cpf_cnpj',18)->unique();
             $table->string('cep',150);
         });
     }
