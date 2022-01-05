@@ -30,7 +30,17 @@ class ControllerDependent extends Controller
             $dependent->save();
             return response()->json(['message'=>'Dependente salvo.']);
         }catch(\exception $e){
-            return response()->json(['message'=>$e->getCode()]);    
+            switch($e->errorInfo[1]){
+                case 1048:
+                    $error = "CAMPOS NÃO PODEM FICAR EM BRANCO.";
+                    break;
+
+                case 1062:
+                    $error = "CPF ou CNPJ duplicado.";
+                    break;
+                
+            }
+                return response()->json(['message'=>$error ]);    
         }
     }
 
@@ -50,7 +60,12 @@ class ControllerDependent extends Controller
                 $dependent->update();
                 return response()->json(['message'=>'Registro Alterado.']);
             }catch(\exception $e){
-                return response()->json(['message'=>$e->getCode()]);
+                switch($e->errorInfo[1]){
+                    case 1048:
+                        $error = "CAMPOS NÃO PODEM FICAR EM BRANCO.";
+                        break;
+                }
+                return response()->json(['message'=>$error]);
             }
         }else{
             return response()->json(['message'=>'Nenhum Registro encontrado.']);

@@ -27,6 +27,7 @@ class ControllerClient extends Controller
         
         if($Digit <> $check){
             return response()->json(['message'=>'CPF ou CNPJ inválido.']);
+            
  
         }else{
             try{
@@ -37,10 +38,19 @@ class ControllerClient extends Controller
                 $Client->cep      = $request->cep;
                 $Client->save();
                 return response()->json(['message'=>'Registro Salvo.']);
-            }catch(\Exception $e){
-                if($e->getCode() == 23000){
-                    return response()->json(['message'=>'CPF ou CNPJ já cadastrado']);
+            }catch(\Exception  $e){
+                switch($e->errorInfo[1]){
+                    case 1048:
+                        $error = "CAMPOS NÃO PODEM FICAR EM BRANCO.";
+                        break;
+
+                    case 1062:
+                        $error = "CPF ou CNPJ duplicado.";
+                        break;
+                    
                 }
+                    return response()->json(['message'=>$error ]);
+                
                 
             }
         }
@@ -53,22 +63,38 @@ class ControllerClient extends Controller
 
     public function update(Request $request, $id)
     {
-        if(Client::where('id', $id)->exists()) {
-            try{
-                $Client = Client::find($id);
-                $Client->name     = $request->name;
-                $Client->address  = $request->address;
-                $Client->cpf_cnpj = $request->cpf_cnpj;
-                $Client->cep      = $request->cep;
-                $Client->update();
-                return response()->json(['message'=>'Registro Alterado.']);
-            }catch(\exception $e){
-                if($e->getCode() == 23000){
-                    return response()->json(['message'=>'Não foi possível alterar. Existe cliente com esse CPF ou CNPJ.']);
-                }
-            }
+        $cpf_cnpj = $request->cpf_cnpj;
+        $p1       = new Cpf_cnpj();
+        $check    = $p1->validaCPF_CNPJ($cpf_cnpj);
+
+        $iDigit = strlen($cpf_cnpj);
+        $Digit  = substr($cpf_cnpj,$iDigit-2,2);
+        
+        if($Digit <> $check){
+            return response()->json(['message'=>'CPF ou CNPJ inválido.']);
         }else{
-            return response()->json(['message'=>'Nenhum Registro encontrado.']);
+
+            if(Client::where('id', $id)->exists()) {
+                try{
+                    $Client = Client::find($id);
+                    $Client->name     = $request->name;
+                    $Client->address  = $request->address;
+                    $Client->cpf_cnpj = $request->cpf_cnpj;
+                    $Client->cep      = $request->cep;
+                    $Client->update();
+                    return response()->json(['message'=>'Registro Alterado.']);
+                }catch(\exception $e){
+                    switch($e->errorInfo[1]){
+                        case 1048:
+                            $error = "CAMPOS NÃO PODEM FICAR EM BRANCO.";
+                            break;
+                    }
+                    return response()->json(['message'=>$error]);
+
+                }
+            }else{
+                return response()->json(['message'=>'Nenhum Registro encontrado.']);
+            }
         }
     }
 
@@ -80,13 +106,15 @@ class ControllerClient extends Controller
                 $Client->delete();
                 return response()->json(['message'=>'Registro Excluído.']);
             }catch(\exception $e){
-                if($e->getCode() == 23000){
-                    return response()->json(['message'=>'Não foi possível excluir. Existe dependentes nesse cliente.']);
+                switch($e->errorInfo[1]){
+                    case 1451:
+                        $error = "Não foi possível excluir. Existe dependentes nesse cliente.";
+                        break;
                 }
+                return response()->json(['message'=>$error]);
             }
         }else{
             return response()->json(['message'=>'Nenhum Registro encontrado.']);
         }
-
     }
 }
