@@ -12,7 +12,7 @@ class ControllerDependent extends Controller
         $data = DB::table('dependents')
         ->where('clients.id',$id)
         ->join('clients','clients.id','=','dependents.clients_id')
-        ->select('clients.name as name_client',
+        ->select('clients.name as name_client','clients.cpf_cnpj as cpf_cnpj',
                  'dependents.id as dependent_id',
                  'dependents.name as name','dependents.age as age',
                  'dependents.date_birth as date_birth')
