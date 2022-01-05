@@ -5,13 +5,15 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Client;
 use App\Classe\cpf_cnpj;
+use Illuminate\Support\Facades\DB;
+
 
 class ControllerClient extends Controller
 {
     public function all()
     {    
-        return Client::all(); // Retorna todos registros
-
+        $data = DB::table('clients')->orderby('name')->get(); // Retorna todos registros
+        return response()->json($data);
     }   
 
     public function create(Request $request)
@@ -52,16 +54,19 @@ class ControllerClient extends Controller
     public function update(Request $request, $id)
     {
         if(Client::where('id', $id)->exists()) {
-            $Client = Client::find($id);
-
-            $Client->name     = $request->name;
-            $Client->address  = $request->address;
-            $Client->cpf_cnpj = $request->cpf_cnpj;
-            $Client->cep      = $request->cep;
-
-            $Client->update();
-
-            return response()->json(['message'=>'Registro Alterado.']);
+            try{
+                $Client = Client::find($id);
+                $Client->name     = $request->name;
+                $Client->address  = $request->address;
+                $Client->cpf_cnpj = $request->cpf_cnpj;
+                $Client->cep      = $request->cep;
+                $Client->update();
+                return response()->json(['message'=>'Registro Alterado.']);
+            }catch(\exception $e){
+                if($e->getCode() == 23000){
+                    return response()->json(['message'=>'Não foi possível alterar. Existe cliente com esse CPF ou CNPJ.']);
+                }
+            }
         }else{
             return response()->json(['message'=>'Nenhum Registro encontrado.']);
         }
