@@ -88,6 +88,11 @@ class ControllerClient extends Controller
                         case 1048:
                             $error = "CAMPOS NÃO PODEM FICAR EM BRANCO.";
                             break;
+                        case 1062:
+                            $error = "CPF ou CNPJ duplicado.";
+                            break;
+                        
+        
                     }
                     return response()->json(['message'=>$error]);
 
